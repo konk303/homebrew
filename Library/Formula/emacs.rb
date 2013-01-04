@@ -13,6 +13,7 @@ class Emacs < Formula
   option "srgb", "Enable sRGB colors in the Cocoa version of emacs"
   option "with-x", "Include X11 support"
   option "use-git-head", "Use Savannah git mirror for HEAD builds"
+  option "inline", "Apply inline patch for IMEs"
 
   if build.include? "use-git-head"
     head 'http://git.sv.gnu.org/r/emacs.git'
@@ -20,6 +21,7 @@ class Emacs < Formula
     head 'bzr://http://bzr.savannah.gnu.org/r/emacs/trunk'
   end
 
+  depends_on "autoconf" => :build
   depends_on :x11 if build.include? "with-x"
 
   fails_with :llvm do
@@ -28,10 +30,16 @@ class Emacs < Formula
   end
 
   def patches
+    ret = Hash.new {|hash, key| hash[key] = []}
     # Fullscreen patch works against 24.2; already included in HEAD
     if build.include? "cocoa" and not build.head?
-      "https://raw.github.com/gist/1746342/702dfe9e2dd79fddd536aa90d561efdeec2ba716"
+      ret[:p1] << "https://raw.github.com/gist/1746342/702dfe9e2dd79fddd536aa90d561efdeec2ba716"
     end
+    # ime inline patch
+    if build.include? "inline"
+      ret[:p0] << "http://svn.sourceforge.jp/svnroot/macemacsjp/inline_patch/trunk/emacs-inline.patch"
+    end
+    ret
   end
 
   def install
